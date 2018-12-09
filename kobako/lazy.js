@@ -14,17 +14,17 @@ lazy_add(1,2)
 
  */
 
-window.my_lazy = (() => {
-    const storage = {
-        //name : [{args, value}]
-    }
+(() => {
+    // const global_storage = {
+    //     //name : [{args, value}]
+    // }
 
-    function is_array_equal(a1,a2){
-        if(a1.length != a2.length){
+    function is_array_equal(a1, a2) {
+        if (a1.length != a2.length) {
             return false
         }
-        for(let i = 0;i<a1.length;i++){
-            if(a1[i] != a2[i]){
+        for (let i = 0; i < a1.length; i++) {
+            if (a1[i] != a2[i]) {
                 return false
             }
         }
@@ -34,27 +34,32 @@ window.my_lazy = (() => {
     function value(memories, ...args) {
         const it = memories.find(m => is_array_equal(m.args, args))
 
-        if(it == null){
+        if (it == null) {
             return null
         }
         return it.value
     }
 
-    const result = (func) => {
-        storage[func.name] = []
-
+    window.my_lazy = (func) => {
+        const storage = []
         return (...args) => {
-            const v = value(storage[func.name], ...args)
-            if(v != null){
+            const v = value(storage, ...args)
+            if (v != null) {
                 return v
             }
             const new_value = func(...args)
-            storage[func.name].push({
+            storage.push({
                 args, value: new_value
             })
             return new_value
         }
     }
 
-    return result
+    if (typeof define === 'function') {
+        define(() => {
+            return my_lazy
+        })
+    }
+
 })()
+

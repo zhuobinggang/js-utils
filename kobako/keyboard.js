@@ -75,3 +75,7 @@ window.my_keyboard = (() => {
         }
     }
 })()
+
+if(typeof define === 'function'){
+    define(my_keyboard)
+}
