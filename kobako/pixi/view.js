@@ -11,7 +11,7 @@
             this.app = app
             this.position = { x: 0, y: 0 }
         }
-        update() {
+        adjust() {
             const s = this.sprite
             const hh = this.half_height
             const hw = this.half_width

@@ -6,6 +6,15 @@ window.my_sprite_util = (() => {
         sprite.vx = 0
     }
     return {
+        emit_by_keyboard: (player, key, kb) => {
+            player.emitting = false
+            kb.mount_down(key, () => {
+                player.emitting = true
+            })
+            kb.mount_up(key, () => {
+                player.emitting = false
+            })
+        },
         move_by_keyboard: (player, velocity, kb) => {
             player.vx = 0
             player.vy = 0
@@ -32,29 +41,29 @@ window.my_sprite_util = (() => {
             kb.mount_up('d', () => { x_axis_stop(player) })
         },
         ani_by_keyboard: (player, kb) => {
-            kb.mount_down('w', () => { player.setAni('up') })
-            // kb.mount_pressing('w', () => { player.setAni('up') })
+            kb.mount_down('w', () => { player.set_ani('up') })
+            // kb.mount_pressing('w', () => { player.set_ani('up') })
             kb.mount_up('w', () => {
                 if (player.anime.name == 'up')
-                    player.setAni('up_stop')
+                    player.set_ani('up_stop')
             })
-            kb.mount_down('a', () => { player.setAni('left') })
-            // kb.mount_pressing('a', () => { player.setAni('left') })
+            kb.mount_down('a', () => { player.set_ani('left') })
+            // kb.mount_pressing('a', () => { player.set_ani('left') })
             kb.mount_up('a', () => {
                 if (player.anime.name == 'left')
-                    player.setAni('left_stop')
+                    player.set_ani('left_stop')
             })
-            kb.mount_down('s', () => { player.setAni('down') })
-            // kb.mount_pressing('s', () => { player.setAni('down') })
+            kb.mount_down('s', () => { player.set_ani('down') })
+            // kb.mount_pressing('s', () => { player.set_ani('down') })
             kb.mount_up('s', () => {
                 if (player.anime.name == 'down')
-                    player.setAni('down_stop')
+                    player.set_ani('down_stop')
             })
-            kb.mount_down('d', () => { player.setAni('right') })
-            // kb.mount_pressing('d', () => { player.setAni('right') })
+            kb.mount_down('d', () => { player.set_ani('right') })
+            // kb.mount_pressing('d', () => { player.set_ani('right') })
             kb.mount_up('d', () => {
                 if (player.anime.name == 'right')
-                    player.setAni('right_stop')
+                    player.set_ani('right_stop')
             })
         },
         is_collided: (r1, r2) => {
@@ -107,14 +116,34 @@ window.my_sprite_util = (() => {
             //`hit` will be either `true` or `false`
             return hit;
         },
-        emit_by_keyboard: (player, key, kb) => {
-            player.emitting = false
-            kb.mount_down(key, () => {
-                player.emitting = true
+        move_by_velocity(sprite) {
+            sprite.x += sprite.vx
+            sprite.y += sprite.vy
+        },
+        no_stone_in_the_way(sprite, stones) {
+            const me = this
+
+            const old_position = { x: sprite.x, y: sprite.y }
+
+            this.move_by_velocity(sprite)
+
+            const stone_in_the_way = stones.find(stone => {
+                return me.is_collided(stone, sprite)
             })
-            kb.mount_up(key, () => {
-                player.emitting = false
-            })
+
+            sprite.x = old_position.x
+            sprite.y = old_position.y
+
+            if (stone_in_the_way != null) {
+                return false
+            }
+
+            return true
+        },
+        is_collide_bound(sprite, bound) {
+            const x = sprite.x, y = sprite.y;
+            const width = sprite.width, height = sprite.height;
+            return x < 0 || y < 0 || x + width > bound.width || y + height > bound.height;
         }
     }
 })()

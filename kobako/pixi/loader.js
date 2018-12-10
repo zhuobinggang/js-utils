@@ -16,7 +16,7 @@ const marisa = await my_loader.load_sprite(marisa_texture, '/assets/marisa.json'
 
 */
 
-define(['PIXI','./lazy.js'], (PIXI, my_lazy) => {
+define(['PIXI','../lazy.js', './anime.js'], (PIXI, my_lazy, anime_util) => {
     if (typeof my_lazy != 'function') {
         console.error('pixi_my_loader: you must import my_lazy.js first!')
         return null
@@ -110,74 +110,32 @@ define(['PIXI','./lazy.js'], (PIXI, my_lazy) => {
         })
     }
 
-    function wrap_animation(sprite, data) {
-        let aniFrameId = 0
-        const anime = { name: '', frames: [1] }
-        // console.log(data)
-        sprite.setAni = (name) => {
-            // console.log(name)
-            if (anime.name == name) { // If call for the same ani over a time
-                return
-            }
-            if (data.animes[name] == null) {
-                data.animes[name] = [1]
-            }
-            // Reset
-            anime.name = name
-            anime.frames = data.animes[name]
-            aniFrameId = 0
-        }
-        sprite.play = () => {
-            sprite.set_frame_by_id(anime.frames[aniFrameId])
-            aniFrameId += 1
-            aniFrameId = aniFrameId % anime.frames.length
-        }
-        sprite.anime = anime
-    }
-
 
     // return LayersLoader
     return {
         load_layers: async function(texture, json_url, scale = 1) {
             return tileset_layers_load(texture, json_url, PIXI, scale)
         },
-        load_sprite: async function(texture, json_url) {
-            const data = await load_json(PIXI, json_url)
-            const tile_width = data.tilewidth
-            const tile_height = data.tileheight
-            // console.log(data)
-            const new_texture = texture.clone()
-            const sprite = new PIXI.Sprite(new_texture)
-            sprite.get_frame_by_id = my_lazy((id) => {
-                // console.log(id)
-                return new PIXI.Rectangle(...frame_lazy(id, tile_width, tile_height, texture.width))
-            })
-            sprite.set_frame_by_id = (id) => {
-                sprite.texture.frame = sprite.get_frame_by_id(id)
-            }
-            sprite.set_frame_by_id(1)
-            return sprite
-        },
-        load_sheet_sprite: async function(texture, json_url) {
-            const data = await load_json(PIXI, json_url)
-            const tile_width = data.tilewidth
-            const tile_height = data.tileheight
-            // console.log(data)
-            const new_texture = texture.clone()
+        load_sheet_sprite: async function(texture, json_url, scale = 1) {
+            window.texture = texture 
+
+            const texture_spawner = await this.load_sheet_texture_spawner(texture, json_url)
+
+            const new_texture = texture_spawner()
+
+            window.new_texture = new_texture
+
             const sprite = new PIXI.Sprite(new_texture)
 
-            //wrap set_frame_by_id function
-            sprite.get_frame_by_id = my_lazy((id) => {
-                // console.log(id)
-                return new PIXI.Rectangle(...frame_lazy(id, tile_width, tile_height, texture.width))
-            })
-            sprite.set_frame_by_id = (id) => {
-                sprite.texture.frame = sprite.get_frame_by_id(id)
-            }
-            sprite.set_frame_by_id(1)
+            // Refer to
+            sprite.get_frame = new_texture.get_frame
+            sprite.set_frame = new_texture.set_frame
+            sprite.set_frame(1)
 
-            wrap_animation(sprite, data)
+            // wrap_animation(sprite, new_texture.animes)
+            anime_util.animation_sprite(sprite)
 
+            sprite.scale.set(scale)
             return sprite
         },
         load_sheet_texture_spawner: async function(texture, json_url){
@@ -191,7 +149,7 @@ define(['PIXI','./lazy.js'], (PIXI, my_lazy) => {
                 frames.push(new PIXI.Rectangle(...frame_lazy(i, data.tilewidth, data.tileheight, texture.width)))
             }
 
-            function get_frame_by_id(id){
+            function get_frame(id){
                 return frames[id-1]
             }
 
@@ -199,9 +157,12 @@ define(['PIXI','./lazy.js'], (PIXI, my_lazy) => {
 
             return () => {
                 const new_texture = texture.clone()
-                new_texture.get_frame_by_id = get_frame_by_id
+                new_texture.get_frame = get_frame
+                new_texture.set_frame = (id) => {
+                    new_texture.frame = get_frame(id)
+                }
                 new_texture.animes = data.animes
-                new_texture.frame = get_frame_by_id(1)
+                new_texture.set_frame(1)
                 return new_texture
             }
         }
