@@ -5,6 +5,9 @@ window.my_sprite_util = (() => {
     function x_axis_stop(sprite) {
         sprite.vx = 0
     }
+    function point(x,y){
+        return {x,y}
+    }
     return {
         emit_by_keyboard: (player, key, kb) => {
             player.emitting = false
@@ -19,26 +22,55 @@ window.my_sprite_util = (() => {
             player.vx = 0
             player.vy = 0
             player.facing = 1 // 0 1 2 3: up right down left
+
+            player.kb = {
+                w_down: false,
+                a_down: false,
+                s_down: false,
+                d_down: false,
+            }
+
+            // player.facing_point = point(player.x + 1, player.x)
             kb.mount_down('w', () => {
                 player.vy = -velocity
                 player.facing = 0
+                // player.facing_point = point(player.x, player.y - 200)
+                player.kb.w_down = true
             })
-            kb.mount_up('w', () => { y_axis_stop(player) })
+            kb.mount_up('w', () => { 
+                y_axis_stop(player) 
+                player.kb.w_down = false
+            })
             kb.mount_down('a', () => {
                 player.vx = -velocity
                 player.facing = 3
+                // player.facing_point = point(player.x - 200, player.y)
+                player.kb.a_down = true 
             })
-            kb.mount_up('a', () => { x_axis_stop(player) })
+            kb.mount_up('a', () => { 
+                x_axis_stop(player) 
+                player.kb.a_down = false
+            })
             kb.mount_down('s', () => {
                 player.vy = velocity
                 player.facing = 2
+                // player.facing_point = point(player.x, player.y + 200)
+                player.kb.s_down = true
             })
-            kb.mount_up('s', () => { y_axis_stop(player) })
+            kb.mount_up('s', () => { 
+                y_axis_stop(player) 
+                player.kb.s_down = false
+            })
             kb.mount_down('d', () => {
                 player.vx = velocity
                 player.facing = 1
+                // player.facing_point = point(player.x + 200, player.y)
+                player.kb.d_down = true
             })
-            kb.mount_up('d', () => { x_axis_stop(player) })
+            kb.mount_up('d', () => { 
+                x_axis_stop(player) 
+                player.kb.d_down = false
+            })
         },
         ani_by_keyboard: (player, kb) => {
             kb.mount_down('w', () => { player.set_ani('up') })
@@ -117,6 +149,9 @@ window.my_sprite_util = (() => {
             return hit;
         },
         move_by_velocity(sprite) {
+            if(sprite.vx == null){
+                return
+            }
             sprite.x += sprite.vx
             sprite.y += sprite.vy
         },
@@ -144,6 +179,18 @@ window.my_sprite_util = (() => {
             const x = sprite.x, y = sprite.y;
             const width = sprite.width, height = sprite.height;
             return x < 0 || y < 0 || x + width > bound.width || y + height > bound.height;
+        },
+        facing_by_mouse(sprite, stage, view){
+            sprite.facing_point = {x: 0, y: 0}
+            stage.interactive = true
+            stage.on('mousemove', ({data: {global: {x,y}}}) => {
+                sprite.facing_point.x = x + view.position.x
+                sprite.facing_point.y = y + view.position.y
+            })
+
+            stage.on('click', ({data: {global: {x,y}}}) => {
+                console.log(x,y)
+            })
         }
     }
 })()

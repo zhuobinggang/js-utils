@@ -10,6 +10,10 @@
             this.sprite = sprite
             this.app = app
             this.position = { x: 0, y: 0 }
+
+            // this.sprite_x = 0
+            // this.sprite_y = 0
+            this.container = []
         }
         adjust() {
             const s = this.sprite
@@ -37,10 +41,20 @@
             }
 
 
-            this.app.stage.x -= (x - this.position.x)
-            this.app.stage.y -= (y - this.position.y)
+            const dx = x - this.position.x,
+                  dy = y - this.position.y;
+            this.app.stage.x -= dx
+            this.app.stage.y -= dy
+            this.container.forEach(yes => { // The accompanying sprites are opposite to the stage
+                yes.x += dx
+                yes.y += dy
+            })
             this.position.x = x
             this.position.y = y
+        }
+
+        add(sprite) {
+            this.container.push(sprite)
         }
     }
 
