@@ -14,7 +14,15 @@ lazy_add(1,2)
 
  */
 
-(() => {
+((factory) => {
+    if(module != null){
+        module.exports = factory()
+    }else if(typeof define === 'function'){
+        define(factory)
+    }else{
+        window.lazy = factory()
+    }
+})(() => {
     // const global_storage = {
     //     //name : [{args, value}]
     // }
@@ -40,7 +48,7 @@ lazy_add(1,2)
         return it.value
     }
 
-    window.my_lazy = (func) => {
+    const my_lazy = (func) => {
         const storage = []
         return (...args) => {
             const v = value(storage, ...args)
@@ -55,11 +63,6 @@ lazy_add(1,2)
         }
     }
 
-    if (typeof define === 'function') {
-        define(() => {
-            return my_lazy
-        })
-    }
-
-})()
+    return my_lazy
+})
 
